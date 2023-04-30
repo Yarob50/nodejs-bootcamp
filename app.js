@@ -6,7 +6,7 @@ const app = express();
 
 // step: 4
 app.get("/hello", function (req, res) {
-	res.send("welcome to the javascript bootcamp");
+	res.send("welcome to the JS bootcamp");
 });
 
 app.get("/name", function (req, res) {
