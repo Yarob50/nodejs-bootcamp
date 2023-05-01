@@ -14,6 +14,6 @@ app.get("/name", function (req, res) {
 });
 
 // step: 3
-app.listen(3300, function () {
+app.listen(8000, function () {
 	console.log("listening");
 });
