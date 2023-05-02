@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Document</title>
+	</head>
+	<body>
+		<div>
+			<!-- POST REQUEST -->
+			<h1>Post Request Form</h1>
+			<form action="/users" method="post">
+				<label>Name: </label>
+				<input name="username" />
+
+				<!-- <input name="x" />
+
+				<input name="y" />
+
+				<input name="z" /> -->
+
+				<button>submit</button>
+			</form>
+
+			<hr />
+
+			<h1>Put Request Form</h1>
+			<!-- PUT REQUEST -->
+			<form id="put-req-form" action="/users" method="put">
+				<label>Name: </label>
+				<input name="username" />
+
+				<!-- <input name="x" />
+
+				<input name="y" />
+
+				<input name="z" /> -->
+
+				<button>submit</button>
+			</form>
+		</div>
+	</body>
+
+	<script>
+		const form = document.getElementById("put-req-form");
+
+		form.addEventListener("submit", function (event) {
+			event.preventDefault();
+
+			fetch("/users", {
+				method: "PUT",
+			}).then((result) => {
+				result.json().then((res) => {
+					console.log(res);
+				});
+			});
+		});
+	</script>
+</html>
