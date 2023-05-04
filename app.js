@@ -1,12 +1,28 @@
-// step: 1
 const express = require("express");
 
-const bodyParser = require("body-parser");
+// step 1: by requiring mongoose
+const mongoose = require("mongoose");
 
-// step: 2
+// step 2: connect to the database
+mongoose
+	.connect(
+		"mongodb+srv://admin:admin112233@cluster0.23wtpqw.mongodb.net/?retryWrites=true&w=majority"
+	)
+	.then(() => {
+		console.log("=======***connection succeeded***=========");
+	})
+	.catch((error) => {
+		console.log("=======***error***=========");
+		console.log(error);
+		console.log("=======***error***=========");
+	});
+
+// step 3: get the model
+const User = require("./models/User");
+
 const app = express();
 
-app.use(bodyParser.urlencoded({ extended: false }));
+// app.use(bodyParser.urlencoded({ extended: false }));
 
 // telling node js to use (ejs) as the view engine
 app.set("view engine", "ejs");
@@ -17,59 +33,33 @@ app.get("/hello", function (req, res) {
 	res.send("welcome to the JS");
 });
 
-app.get("/name", function (req, res) {
-	res.send("Yarob");
+// step 4: communicate with the database using the model
+app.get("/createUser", (req, res) => {
+	// 4.1 create an object from the model by passing the data into the columns
+	const u = new User({
+		fullName: "Ahmad",
+		id: "43242343",
+		phoneNumber: "536343534",
+		email: "ahamd@gmail.com",
+		age: "20edsfds",
+	});
+
+	// save the object created
+	u.save()
+		.then(() => {
+			res.send("record created in the DB");
+		})
+		.catch((error) => {
+			if (error.errors.hasOwnProperty("age")) {
+				res.send("error in the age input");
+			} else {
+				res.send(error.message);
+			}
+		});
 });
 
-// sending a regular html file
-app.get("/testHtml", (req, res) => {
-	res.sendFile(__dirname + "/test.html");
-});
-
-// rendering ejs file with simple variable
-app.get("/testingEjs", (req, res) => {
-	const course = "python";
-	res.render("introToEjs.ejs", { name: course });
-});
-
-// rendering ejs file with array variable
-app.get("/users", (req, res) => {
-	res.send("get request");
-	res.send(req.query);
-	const users = ["Ahmad", "kahled", "Yarob"];
-	res.render("users.ejs", { users });
-});
-
-app.get("/users/:id", (req, res) => {
-	res.send(req.params.id);
-	res.send("this is the user id route");
-});
-
-// rendering ejs file with array of objects variable
-app.get("/usersObjects", (req, res) => {
-	const usersObjects = [
-		{ name: "Yarob", age: 20, id: 23 },
-		{ name: "khaled", age: 20, id: 23 },
-		{ name: "ahmad", age: 20, id: 23 },
-	];
-	res.render("usersObjects.ejs", { usersObjects });
-});
-
-app.put("/users", (req, res) => {
-	res.json({ text: "put request" });
-});
-
-app.post("/users", (req, res) => {
-	res.send("post request");
-	// console.log(req.body);
-	// res.send(req.query);
-});
-
-app.get("/form", (req, res) => {
-	res.render("form.ejs");
-});
 // step: 3
-app.listen(3300, function () {
+app.listen(8800, function () {
 	console.log("listening");
 });
 
