@@ -1,12 +1,14 @@
 const express = require("express");
 
+const parser = require("body-parser");
+
 // step 1: by requiring mongoose
 const mongoose = require("mongoose");
 
 // step 2: connect to the database
 mongoose
 	.connect(
-		"mongodb+srv://admin:admin112233@cluster0.23wtpqw.mongodb.net/?retryWrites=true&w=majority"
+		"mongodb+srv://yarob:yarob1233@test.7p0vy71.mongodb.net/?retryWrites=true&w=majority"
 	)
 	.then(() => {
 		console.log("=======***connection succeeded***=========");
@@ -21,6 +23,8 @@ mongoose
 const User = require("./models/User");
 
 const app = express();
+
+app.use(parser.urlencoded({ extended: false }));
 
 // app.use(bodyParser.urlencoded({ extended: false }));
 
@@ -41,21 +45,100 @@ app.get("/createUser", (req, res) => {
 		id: "43242343",
 		phoneNumber: "536343534",
 		email: "ahamd@gmail.com",
-		age: "20edsfds",
+		age: "20",
 	});
 
 	// save the object created
+
 	u.save()
 		.then(() => {
 			res.send("record created in the DB");
 		})
 		.catch((error) => {
-			if (error.errors.hasOwnProperty("age")) {
-				res.send("error in the age input");
-			} else {
-				res.send(error.message);
-			}
+			res.send(error);
+			// if (error.errors.hasOwnProperty("age")) {
+			// 	res.send("error in the age input");
+			// } else {
+			// 	res.send(error.message);
+			// }
 		});
+});
+
+app.get("/createUserForm", (req, res) => {
+	res.render("addUserForm");
+});
+
+// ======= CRUD ========
+
+// CREATE
+app.post("/createUser", (req, res) => {
+	const u = new User({
+		fullName: req.body.username,
+		phoneNumber: "324324324",
+		email: "yarob@gmail.com",
+		age: req.body.age,
+	});
+
+	u.save()
+		.then(() => {
+			res.send("user created succesfully");
+		})
+		.catch((e) => {
+			res.send(e.message);
+		});
+});
+
+// READ (ALL USERS)
+app.get("/allUsers", (req, res) => {
+	User.find().then((users) => {
+		res.render("allUsers.ejs", { allUsers: users });
+		// res.send(users);
+	});
+	// res.send("all users");
+});
+
+// READ A SPECIFIC USER
+app.get("/getSpecificUser/:userId", (req, res) => {
+	const userId = req.params.userId;
+	User.findById(userId)
+		.then((user) => {
+			res.send(user);
+		})
+		.catch((err) => {
+			res.send(err.message);
+		});
+});
+
+// DELETE A SPECIFIC USER
+app.get("/deleteUser/:userId", (req, res) => {
+	const userId = req.params.userId;
+	// User.findById(userId)
+	// 	.then((user) => {
+	// 		user.remove().exec();
+	// 		res.send("removed");
+	// 	})
+	// 	.catch((err) => {
+	// 		res.send(err.message);
+	// 	});
+
+	User.deleteOne({ _id: userId })
+		.then(() => {
+			res.send("completed");
+		})
+		.catch((err) => {
+			res.send(err.message);
+		});
+});
+
+// UPDATE
+app.get("/updateUser/:userId", (req, res) => {
+	const newFullName = req.query.fullName;
+	User.findById(req.params.userId).then((user) => {
+		user.fullName = newFullName;
+		user.save().then(() => {
+			res.send("updated");
+		});
+	});
 });
 
 // step: 3
