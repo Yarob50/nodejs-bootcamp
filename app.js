@@ -31,46 +31,13 @@ app.use(parser.urlencoded({ extended: false }));
 // telling node js to use (ejs) as the view engine
 app.set("view engine", "ejs");
 
-// app.use(bodyParser.urlencoded());
-// step: 4
-app.get("/hello", function (req, res) {
-	res.send("welcome to the JS");
-});
+// ======= DATABASE CRUD WITH UI ========
 
-// step 4: communicate with the database using the model
-app.get("/createUser", (req, res) => {
-	// 4.1 create an object from the model by passing the data into the columns
-	const u = new User({
-		fullName: "Ahmad",
-		id: "43242343",
-		phoneNumber: "536343534",
-		email: "ahamd@gmail.com",
-		age: "20",
-	});
-
-	// save the object created
-
-	u.save()
-		.then(() => {
-			res.send("record created in the DB");
-		})
-		.catch((error) => {
-			res.send(error);
-			// if (error.errors.hasOwnProperty("age")) {
-			// 	res.send("error in the age input");
-			// } else {
-			// 	res.send(error.message);
-			// }
-		});
-});
-
+// CREATE A NEW USER
 app.get("/createUserForm", (req, res) => {
 	res.render("addUserForm");
 });
 
-// ======= CRUD ========
-
-// CREATE
 app.post("/createUser", (req, res) => {
 	const u = new User({
 		fullName: req.body.username,
@@ -97,49 +64,69 @@ app.get("/allUsers", (req, res) => {
 	// res.send("all users");
 });
 
-// READ A SPECIFIC USER
-app.get("/getSpecificUser/:userId", (req, res) => {
-	const userId = req.params.userId;
+// SHOW USER DETAILS
+app.get("/userDetails/:id", (req, res) => {
+	const userId = req.params.id;
+
 	User.findById(userId)
 		.then((user) => {
-			res.send(user);
+			res.render("userDetails.ejs", { user: user });
 		})
-		.catch((err) => {
-			res.send(err.message);
+		.catch((error) => {
+			res.send(error.message);
 		});
 });
 
-// DELETE A SPECIFIC USER
-app.get("/deleteUser/:userId", (req, res) => {
-	const userId = req.params.userId;
-	// User.findById(userId)
-	// 	.then((user) => {
-	// 		user.remove().exec();
-	// 		res.send("removed");
-	// 	})
-	// 	.catch((err) => {
-	// 		res.send(err.message);
-	// 	});
-
-	User.deleteOne({ _id: userId })
+// REMOVE USER
+app.get("/removeUser/:id", (req, res) => {
+	const userId = req.params.id;
+	User.findByIdAndDelete(userId)
 		.then(() => {
-			res.send("completed");
+			res.redirect("/allUsers");
+		})
+		.catch(() => {
+			res.send("error");
+		});
+});
+
+// ====== UPDATE WITH CREATE IN THE SAME FORM =====
+// EDIT (UPDATE) USER
+app.get("/editUser/:id", (req, res) => {
+	const userId = req.params.id;
+	User.findById(userId).then((user) => {
+		res.render("addUserForm", { user: user });
+	});
+});
+
+app.post("/updateCurrentUser/:id", (req, res) => {
+	const userId = req.params.id;
+	res.send(userId);
+});
+// ======// UPDATE WITH CREATE IN THE SAME FORM //=====
+
+///====== UPDATE & CREATE IN SEPARATE FORMS =======
+app.get("/separateEditUser/:userId", (req, res) => {
+	const userId = req.params.userId;
+	User.findById(userId)
+		.then((returnedUser) => {
+			res.render("updateUserForm.ejs", { u: returnedUser });
 		})
 		.catch((err) => {
 			res.send(err.message);
 		});
 });
 
-// UPDATE
-app.get("/updateUser/:userId", (req, res) => {
-	const newFullName = req.query.fullName;
-	User.findById(req.params.userId).then((user) => {
-		user.fullName = newFullName;
-		user.save().then(() => {
-			res.send("updated");
+app.post("/separateUpdateUser/:updatedUserId", (req, res) => {
+	const id = req.params.updatedUserId;
+	User.findById(id).then((foundUser) => {
+		const name = req.body.newName;
+		foundUser.fullName = name;
+		foundUser.save().then(() => {
+			res.redirect("/allUsers");
 		});
 	});
 });
+///======// UPDATE & CREATE IN SEPARATE FORMS //=======
 
 // step: 3
 app.listen(8800, function () {

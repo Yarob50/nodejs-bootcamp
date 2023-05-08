@@ -7,6 +7,19 @@
 		<title>Document</title>
 	</head>
 	<body>
+		<% if(typeof user !== "undefined"){ %>
+		<h1>Updating the user: <%= user.fullName %></h1>
+		<% } %> <% if(typeof user !== "undefined"){ %>
+		<form action="/updateCurrentUser/<%= user._id %>" method="POST">
+			<label>User Name</label>
+			<input name="username" />
+
+			<label>User Age</label>
+			<input name="age" />
+
+			<button>Update</button>
+		</form>
+		<% } else { %>
 		<form action="/createUser" method="POST">
 			<label>User Name</label>
 			<input name="username" />
@@ -16,5 +29,6 @@
 
 			<button>Create</button>
 		</form>
+		<% } %>
 	</body>
 </html>

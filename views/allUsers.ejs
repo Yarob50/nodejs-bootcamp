@@ -13,6 +13,39 @@
 		<h1><%= user.fullName %></h1>
 		<h3><%= user.email %></h3>
 		<h5><%= user.phoneNumber %></h5>
+		<h5><%= user._id %></h5>
+		<a
+			href="/userDetails/<%=user._id%>"
+			style="
+				background: gray;
+				color: rgb(255, 255, 255);
+				padding: 7px;
+				border-radius: 10px;
+			"
+			>Details</a
+		>
+
+		<a
+			href="/removeUser/<%= user._id %>"
+			style="
+				background: rgb(122, 0, 0);
+				color: rgb(255, 255, 255);
+				padding: 7px;
+				border-radius: 10px;
+			"
+			>Delete</a
+		>
+
+		<a
+			href="/separateEditUser/<%= user._id %>"
+			style="
+				background: rgb(1, 148, 82);
+				color: rgb(255, 255, 255);
+				padding: 7px;
+				border-radius: 10px;
+			"
+			>Update</a
+		>
 		<hr />
 		<% } %>
 	</body>
