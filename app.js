@@ -129,7 +129,7 @@ app.post("/separateUpdateUser/:updatedUserId", (req, res) => {
 ///======// UPDATE & CREATE IN SEPARATE FORMS //=======
 
 // step: 3
-app.listen(8800, function () {
+app.listen(process.env.port || 8800, function () {
 	console.log("listening");
 });
 
