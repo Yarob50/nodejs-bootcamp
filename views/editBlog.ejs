@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Document</title>
+	</head>
+	<body>
+		<h1>Edit Blog: <%= blog.title %></h1>
+
+		<form action="/updateBlog/<%= blog._id %>" method="post">
+			<label>title</label>
+			<input name="titleInput" value="<%= blog.title%>" />
+
+			<label>body</label>
+			<textarea name="bodyInput"> <%= blog.body %> </textarea>
+
+			<button>Update</button>
+		</form>
+	</body>
+</html>

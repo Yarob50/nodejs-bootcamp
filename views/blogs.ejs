@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Document</title>
+	</head>
+	<body>
+		<h1>All Blogs</h1>
+
+		<a
+			href="/createBlogForm"
+			style="background: green; padding: 3px; color: white"
+		>
+			Add Blog
+		</a>
+
+		<div>
+			<% for( b of allBlogs) { %>
+			<h1><%= b.title %></h1>
+			<a
+				href="/blogs/<%= b._id %>"
+				style="
+					background: blueviolet;
+					color: white;
+					padding: 3px;
+					border-radius: 5px;
+				"
+				>Show</a
+			>
+			<a
+				href="/deleteBlog/<%= b._id %>"
+				style="
+					background: rgb(226, 43, 76);
+					color: white;
+					padding: 3px;
+					border-radius: 5px;
+				"
+				>Delete</a
+			>
+
+			<a
+				href="/updateBlogForm/<%= b._id %>"
+				style="
+					background: rgb(13, 3, 157);
+					color: white;
+					padding: 3px;
+					border-radius: 5px;
+				"
+				>Update</a
+			>
+			<hr />
+			<% } %>
+		</div>
+	</body>
+</html>
