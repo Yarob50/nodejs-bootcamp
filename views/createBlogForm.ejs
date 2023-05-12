@@ -16,6 +16,12 @@
 			<label>body</label>
 			<textarea name="bodyInput">hello world </textarea>
 
+			<select multiple name="selectedTags">
+				<% for( tag of allTags) { %>
+				<option value="<%= tag._id %>"><%= tag.name %></option>
+				<% } %>
+			</select>
+
 			<button>Create</button>
 		</form>
 	</body>

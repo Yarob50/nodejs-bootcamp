@@ -1,3 +1,4 @@
+// USER MODEL
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
@@ -10,6 +11,12 @@ const userSchema = new Schema(
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "profile",
 		},
+		blogs: [
+			{
+				type: mongoose.Schema.Types.ObjectId,
+				ref: "blog",
+			},
+		],
 	},
 	{
 		timestamps: true,

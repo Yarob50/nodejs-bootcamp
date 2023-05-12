@@ -4,6 +4,7 @@ const Blog = require("./models/Blog");
 const User = require("./models/User");
 const bodyParser = require("body-parser");
 const Profile = require("./models/Profile");
+const Tag = require("./models/Tag");
 
 mongoose
 	.connect(
@@ -18,11 +19,6 @@ mongoose
 const app = express();
 
 app.use(bodyParser.urlencoded({ extended: false }));
-
-///// CREATE A NEW BLOG
-app.get("/createBlogForm", (req, res) => {
-	res.render("createBlogForm.ejs");
-});
 
 app.get("/getSpecificUser", (req, res) => {
 	User.findById("645b5113738cbf08366b4033")
@@ -104,13 +100,23 @@ app.get("/createProfile", (req, res) => {
 	});
 });
 
+///// CREATE A NEW BLOG
+app.get("/createBlogForm", (req, res) => {
+	Tag.find().then((returnedTags) => {
+		res.render("createBlogForm.ejs", { allTags: returnedTags });
+	});
+});
+
+///// CREATE BLOG (WHEN THE FORM IS SUBMITTED)
 app.post("/createBlog", (req, res) => {
 	const titleParam = req.body.titleInput;
 	const bodyParam = req.body.bodyInput;
+	const selectedTags = req.body.selectedTags;
 
 	const newBlog = new Blog({
 		title: titleParam,
 		body: bodyParam,
+		tags: selectedTags,
 	});
 
 	newBlog
@@ -125,9 +131,12 @@ app.post("/createBlog", (req, res) => {
 
 ///// READ
 app.get("/blogs", (req, res) => {
-	Blog.find().then((blogs) => {
-		res.render("blogs.ejs", { allBlogs: blogs });
-	});
+	Blog.find()
+		.populate("tags")
+		.then((blogs) => {
+			// res.send(blogs);
+			res.render("blogs.ejs", { allBlogs: blogs });
+		});
 });
 
 app.get("/blogs/:blogId", (req, res) => {
@@ -155,12 +164,6 @@ app.get("/updateBlogForm/:blogId", (req, res) => {
 	Blog.findById(blogId).then((blog) => {
 		res.render("editBlog.ejs", { blog: blog });
 	});
-	// Blog.findByIdAndUpdate(blogId, {
-	//     title: "",
-	//     body: ""
-	// })
-	// res.send(blogId);
-	// res.render("editBlog.ejs");
 });
 
 app.get("/createUser", (req, res) => {
@@ -174,6 +177,7 @@ app.get("/createUser", (req, res) => {
 		res.send("saved");
 	});
 });
+
 app.post("/updateBlog/:blogId", (req, res) => {
 	const blogId = req.params.blogId;
 	const newTitle = req.body.titleInput;
@@ -204,6 +208,69 @@ app.get("/", (req, res) => {
 		.catch((err) => {
 			res.send(err);
 		});
+});
+
+// USER SEEDER METHOD
+app.get("/userSeed", (req, res) => {
+	for (let i = 0; i < 10; i++) {
+		const user = new User({
+			username: "Yarob",
+			email: "test@gmail.com",
+			password: "9999",
+		});
+
+		user.save().then(() => {
+			res.send("saved");
+		});
+	}
+});
+
+// TAGS SEEDER
+app.get("/tagSeeder", (req, res) => {
+	const tagsArray = [
+		{
+			name: "sports",
+			description: "dsjfldsjflds",
+		},
+		{
+			name: "art",
+			description: "dsjfldsjflds",
+		},
+		{
+			name: "policy",
+			description: "dsjfldsjflds",
+		},
+		{
+			name: "sports",
+			description: "dsjfldsjflds",
+		},
+	];
+	Tag.insertMany(tagsArray).then(() => {
+		res.send("completed");
+	});
+});
+
+// ======= USER TO BLOG (ONE TO MANY n-n m-n) RELATIONSHIP
+app.get("/createBlogWithUser/:userId", (req, res) => {
+	const userId = req.params.userId;
+
+	User.findById(userId).then((foundUser) => {
+		const titleParam = req.query.title;
+		const bodyParam = req.query.body;
+
+		const blog = new Blog({
+			title: titleParam,
+			body: bodyParam,
+			user: foundUser,
+		});
+
+		blog.save().then((savedBlog) => {
+			foundUser.blogs.push(savedBlog);
+			foundUser.save().then(() => {
+				res.send("completed");
+			});
+		});
+	});
 });
 app.listen(8888, () => {
 	console.log("listening");

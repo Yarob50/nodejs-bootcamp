@@ -19,6 +19,19 @@
 		<div>
 			<% for( b of allBlogs) { %>
 			<h1><%= b.title %></h1>
+
+			<% for( tag of b.tags ) { %>
+			<h3
+				style="
+					background: orange;
+					padding: 10px;
+					margin: 5px;
+					max-width: 100px;
+				"
+			>
+				<%= tag.name %>
+			</h3>
+			<% } %>
 			<a
 				href="/blogs/<%= b._id %>"
 				style="
