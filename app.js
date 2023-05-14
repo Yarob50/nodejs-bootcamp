@@ -6,6 +6,20 @@ const bodyParser = require("body-parser");
 const Profile = require("./models/Profile");
 const Tag = require("./models/Tag");
 
+// requiring cookies & sessions:
+const cookieParser = require("cookie-parser");
+const session = require("express-session");
+
+const app = express();
+
+// using the cookies & sessions
+app.use(cookieParser());
+app.use(
+	session({
+		secret: "my secret",
+	})
+);
+
 mongoose
 	.connect(
 		"mongodb+srv://yarob:yarob12334@cluster0.bdmavw2.mongodb.net/?retryWrites=true&w=majority"
@@ -16,9 +30,99 @@ mongoose
 	.catch((err) => {
 		console.log(err);
 	});
-const app = express();
 
 app.use(bodyParser.urlencoded({ extended: false }));
+
+app.get("/register", (req, res) => {
+	const username = req.query.username;
+	const email = req.query.email;
+	const password = req.query.password;
+
+	const user = new User({
+		username: username,
+		password: password,
+		email: email,
+	});
+
+	user.save().then(() => {
+		res.send("saved");
+	});
+	// res.send(username + " " + email + " " + password);
+});
+
+app.get("/login", (req, res) => {
+	const username = req.query.username;
+	const password = req.query.password;
+	const email = req.query.email;
+
+	// res.send(typeof username + " " + typeof password);
+	// return;
+	User.findOne({ username: username }, { username: 1, password: 1 })
+		.then((foundUser) => {
+			// res.send("test");
+			// if (Object.keys(foundUser).length === 0) {
+			// 	res.send(foundUser);
+			// } else {
+			// 	res.send("error");
+			// }
+
+			console.log("===========");
+			console.log(foundUser);
+			if (foundUser) {
+				req.session.userId = foundUser._id;
+				res.send(foundUser);
+			} else {
+				res.send("error");
+			}
+			// if (foundUser) {
+			// 	res.send(foundUser);
+			// } else {
+			// 	res.send("credentials are incorrect");
+			// }
+		})
+		.catch((err) => {
+			res.send(err);
+		});
+	// res.send(username + " " + password);
+});
+app.get("/secret", (req, res) => {
+	if (req.session.userId) {
+		res.send("JS bootcamp");
+	} else {
+		res.send("you are not allowed, please login first");
+	}
+});
+
+app.get("/logout", (req, res) => {
+	req.session.destroy();
+	res.send("logged out success");
+});
+
+app.get("/session", (req, res) => {
+	res.send("visiting session");
+});
+
+app.get("/addToCart", (req, res) => {
+	if (req.session.numberOfItems) {
+		req.session.numberOfItems += 1;
+	} else {
+		req.session.numberOfItems = 1;
+	}
+
+	res.send(res.getHeaders());
+	return;
+	req.session.name = "js course";
+	res.send("done");
+});
+
+app.get("/numberOfItems", (req, res) => {
+	res.send(req.session);
+});
+
+app.get("/xyz", (req, res) => {
+	req.session.destroy();
+	res.send("done");
+});
 
 app.get("/getSpecificUser", (req, res) => {
 	User.findById("645b5113738cbf08366b4033")
