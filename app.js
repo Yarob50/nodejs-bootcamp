@@ -13,6 +13,10 @@ app.get("/name", function (req, res) {
 	res.send("Yarob");
 });
 
+app.get("/name2", function (req, res) {
+	res.send("Yarob");
+});
+
 // step: 3
 app.listen(8000, function () {
 	console.log("listening");
