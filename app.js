@@ -7,15 +7,16 @@ const Profile = require("./models/Profile");
 const Tag = require("./models/Tag");
 const cookieParser = require("cookie-parser");
 const session = require("express-session");
+const cors = require("cors");
+
+require("dotenv").config();
 
 // BCRYPT
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
 
 mongoose
-	.connect(
-		"mongodb+srv://yarob:yarob12334@cluster0.bdmavw2.mongodb.net/?retryWrites=true&w=majority"
-	)
+	.connect(process.env.DB_URL)
 	.then(() => {
 		console.log("connected");
 	})
@@ -24,6 +25,10 @@ mongoose
 	});
 const app = express();
 
+app.use(express.json());
+// app.use(express.urlencoded({ extended: true }));
+
+app.use(cors());
 app.use(
 	session({
 		secret: "my secret",
@@ -34,6 +39,53 @@ app.use(cookieParser());
 
 app.use(bodyParser.urlencoded({ extended: false }));
 
+app.delete("/api", (req, res) => {
+	res.json([
+		{
+			name: "Ahmad",
+			age: 20,
+			isStudent: false,
+		},
+		{
+			name: "Ahmad",
+			age: 20,
+			isStudent: false,
+		},
+	]);
+});
+
+app.get("/allBlogs", (req, res) => {
+	Blog.find().then((foundBlogs) => {
+		res.status(200).json(foundBlogs);
+	});
+});
+
+app.post("/createNewUser", (req, res) => {
+	let username = req.body.enteredUsername;
+	let email = req.body.enteredEmail;
+	let password = req.body.enteredPassword;
+
+	if (password) {
+		const user = new User({
+			username: username,
+			email: email,
+			password: password,
+		});
+
+		user.save().then((savedUser) => {
+			res.json({ user: savedUser });
+		});
+	} else {
+		res.status(400).json({ errorMessage: "password field is required" });
+	}
+
+	// res.send(username);
+	// res.json({ username, email, password });
+});
+
+app.get("/envvars", (req, res) => {
+	res.send(process.env.name);
+});
 app.get("/register", (req, res) => {
 	let username = req.query.username;
 	let password = req.query.password;
