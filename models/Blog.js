@@ -6,7 +6,10 @@ const Schema = mongoose.Schema;
 
 const blogSchema = new Schema(
 	{
-		title: String,
+		title: {
+			type: String,
+			select: false,
+		},
 		body: String,
 		user: {
 			type: mongoose.Schema.Types.ObjectId,

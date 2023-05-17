@@ -7,7 +7,7 @@ const Profile = require("./models/Profile");
 const Tag = require("./models/Tag");
 const cookieParser = require("cookie-parser");
 const session = require("express-session");
-const cors = require("cors");
+const jwt = require("jsonwebtoken");
 
 require("dotenv").config();
 
@@ -28,7 +28,7 @@ const app = express();
 app.use(express.json());
 // app.use(express.urlencoded({ extended: true }));
 
-app.use(cors());
+// app.use(cors());
 app.use(
 	session({
 		secret: "my secret",
@@ -101,6 +101,74 @@ app.get("/register", (req, res) => {
 		});
 	});
 });
+
+app.post("/api/login", (req, res) => {
+	const username = req.body.userUsername;
+	const password = req.body.userPassword;
+
+	User.findOne({ username })
+		.select("+password")
+		.then((foundUser) => {
+			if (!foundUser) {
+				res.status(401).json({ errorMessage: "incorrect username" });
+				return;
+			}
+
+			const encryptedPassword = foundUser.password;
+
+			bcrypt
+				.compare(password, encryptedPassword)
+				.then((response) => {
+					if (response == true) {
+						const generatedToke = jwt.sign(
+							{ foundUser },
+							process.env.JWT_SECRET,
+							{
+								expiresIn: "1h",
+							}
+						);
+
+						res.json({ token: generatedToke });
+					} else {
+						res.status(401).json({
+							errorMessage: "incorrect password",
+						});
+					}
+				})
+				.catch((err) => {
+					res.json({ err: err });
+				});
+		})
+		.catch((err) => {
+			res.send(err);
+		});
+});
+
+const checkLoggedInUser = (req, res, next) => {
+	const authHeader = req.headers.authorization;
+	const token = authHeader.split(" ")[1];
+	try {
+		jwt.verify(token, process.env.JWT_SECRET);
+		next();
+	} catch (err) {
+		res.status(401).json({ err });
+	}
+};
+
+app.post("/createPost/:postId", (req, res) => {
+	try {
+		const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+		const post = new Post();
+	} catch (err) {
+		res.status(401).json({ err });
+	}
+});
+app.get("/api/secret", checkLoggedInUser, (req, res) => {
+	res.json({ secret: "hello world" });
+});
+
+app.post("/api/createPost", checkLoggedInUser, (req, res) => {});
 
 app.get("/login", (req, res) => {
 	const username = req.query.username;
