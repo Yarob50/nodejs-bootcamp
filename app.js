@@ -25,6 +25,42 @@ mongoose
 	});
 const app = express();
 
+// ======= MIDDLEWARE ======= //
+const isLoggedIn = (req, res, next) => {
+	try {
+		const authHeader = req.headers.authorization;
+		const token = authHeader.split(" ")[1];
+		const object = jwt.verify(token, process.env.JWT_SECRET);
+		res.locals.object = object;
+		next();
+	} catch (err) {
+		res.json({ errorMessage: err });
+	}
+};
+
+const checkBlogAuthor = (req, res, next) => {
+	try {
+		const authHeader = req.headers.authorization;
+		const token = authHeader.split(" ")[1];
+		const object = jwt.verify(token, process.env.JWT_SECRET);
+		res.locals.object = object;
+		const blogId = req.params.blogId;
+
+		Blog.findById(blogId)
+			.then((foundBlog) => {
+				if (foundBlog.user == object.user.id) {
+					next();
+				} else {
+					res.json({ errorMessage: "unauthorized" });
+				}
+			})
+			.catch((err) => {
+				res.json({ errorMessage: "not found" });
+			});
+	} catch (err) {
+		res.json({ errorMessage: err });
+	}
+};
 app.use(express.json());
 // app.use(express.urlencoded({ extended: true }));
 
@@ -39,26 +75,64 @@ app.use(cookieParser());
 
 app.use(bodyParser.urlencoded({ extended: false }));
 
-app.delete("/api", (req, res) => {
-	res.json([
-		{
-			name: "Ahmad",
-			age: 20,
-			isStudent: false,
-		},
-		{
-			name: "Ahmad",
-			age: 20,
-			isStudent: false,
-		},
-	]);
+/////////////////////////////// AUTH
+// only show the blogs of the logged in user
+app.get("/api/users/:userId/allBlogs", isLoggedIn, (req, res) => {
+	try {
+		// const authHeader = req.headers.authorization;
+		// const token = authHeader.split(" ")[1];
+		// const object = jwt.verify(token, process.env.JWT_SECRET);
+
+		const object = res.locals.object;
+		res.locals.object = object;
+
+		if (object.user.id != req.params.userId) {
+			return res.json({ errorMessage: "unauthorized" });
+		}
+		const id = req.params.userId;
+		Blog.find({ user: id }).then((foundBlogs) => {
+			res.status(200).json(foundBlogs);
+		});
+	} catch (err) {
+		res.json({ errorMessage: err });
+	}
 });
 
-app.get("/allBlogs", (req, res) => {
-	Blog.find().then((foundBlogs) => {
-		res.status(200).json(foundBlogs);
-	});
+// only delete the blogs of the logged in user
+app.delete(
+	"/api/deleteBlog/:blogId",
+	isLoggedIn,
+	checkBlogAuthor,
+	(req, res) => {
+		const id = req.params.blogId;
+
+		Blog.findByIdAndDelete(id)
+			.then((deleteBlog) => {
+				res.json({ deleteBlog });
+			})
+			.catch((err) => {
+				res.json({ errMessage: err });
+			});
+	}
+);
+
+// only update the blogs of the logged in user
+app.patch("/api/updateBlog/:blogId", checkBlogAuthor, (req, res) => {
+	const id = req.params.blogId;
+	const title = req.body.newTitle;
+	const body = req.body.newBody;
+
+	if (!title) {
+		res.status(400).json({ errorMessage: "title is required" });
+	} else {
+		Blog.findByIdAndUpdate(id, { title, body }, { new: true }).then(
+			(updatedBlog) => {
+				res.json({ updatedBlog });
+			}
+		);
+	}
 });
+/////////////////////////////// AUTH
 
 app.post("/createNewUser", (req, res) => {
 	let username = req.body.enteredUsername;
@@ -83,17 +157,6 @@ app.post("/createNewUser", (req, res) => {
 	// res.json({ username, email, password });
 });
 
-const isLoggedIn = (req, res, next) => {
-	try {
-		const authHeader = req.headers.authorization;
-		const token = authHeader.split(" ")[1];
-		const object = jwt.verify(token, process.env.JWT_SECRET);
-		res.locals.object = object;
-		next();
-	} catch (err) {
-		res.json({ errorMessage: err });
-	}
-};
 app.post("/api/createBlog", isLoggedIn, (req, res) => {
 	// res.json(res.locals);
 	// return;
@@ -217,7 +280,14 @@ app.post("/api/login", (req, res) => {
 							}
 						);
 
-						res.json({ token: generatedToke });
+						res.json({
+							token: generatedToke,
+							user: {
+								email: foundUser.email,
+								username: foundUser.username,
+								id: foundUser._id,
+							},
+						});
 					} else {
 						res.status(401).json({
 							errorMessage: "incorrect password",
