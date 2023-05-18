@@ -8,7 +8,8 @@ const blogSchema = new Schema(
 	{
 		title: {
 			type: String,
-			select: false,
+			required: [true, "you should fill the title"],
+			unique: true,
 		},
 		body: String,
 		user: {

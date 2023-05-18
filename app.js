@@ -83,6 +83,90 @@ app.post("/createNewUser", (req, res) => {
 	// res.json({ username, email, password });
 });
 
+const isLoggedIn = (req, res, next) => {
+	try {
+		const authHeader = req.headers.authorization;
+		const token = authHeader.split(" ")[1];
+		const object = jwt.verify(token, process.env.JWT_SECRET);
+		res.locals.object = object;
+		next();
+	} catch (err) {
+		res.json({ errorMessage: err });
+	}
+};
+app.post("/api/createBlog", isLoggedIn, (req, res) => {
+	// res.json(res.locals);
+	// return;
+	const object = res.locals.object;
+	const passedTitle = req.body.titleInput;
+	const passedBody = req.body.bodyInput;
+
+	const blog = new Blog({
+		title: passedTitle,
+		body: passedBody,
+		user: object.user.id,
+	});
+
+	blog.save()
+		.then((createdBlog) => {
+			createdBlog
+				.populate("user")
+				.then((blogWithPopulatedUser) => {
+					res.json({ blog: blogWithPopulatedUser });
+				})
+				.catch((err) => {
+					res.json({ err });
+				});
+		})
+		.catch((err) => {
+			res.json({ errorMessage: err.message });
+		});
+});
+
+app.post("/api/registerUser", (req, res) => {
+	const username = req.body.username;
+	const password = req.body.password;
+	const email = req.body.email;
+
+	User.findOne({ username: username }).then((foundUser) => {
+		if (foundUser) {
+			res.status(400).json({ errorMessage: "username is already taken" });
+		} else {
+			bcrypt.hash(password, saltRounds).then((hashedPassword) => {
+				const newUser = new User({
+					username: username,
+					email: email,
+					password: hashedPassword,
+				});
+
+				newUser
+					.save()
+					.then((createdUser) => {
+						// res.json(createdUser);
+						// return;
+						const token = jwt.sign(
+							{
+								user: {
+									username: createdUser.username,
+									id: createdUser._id,
+								},
+							},
+							process.env.JWT_SECRET,
+							{
+								expiresIn: "1h",
+							}
+						);
+
+						res.json({ token: token });
+					})
+					.catch((err) => {
+						res.json({ error: err });
+					});
+			});
+		}
+	});
+});
+
 app.get("/envvars", (req, res) => {
 	res.send(process.env.name);
 });
@@ -121,7 +205,12 @@ app.post("/api/login", (req, res) => {
 				.then((response) => {
 					if (response == true) {
 						const generatedToke = jwt.sign(
-							{ foundUser },
+							{
+								user: {
+									username: foundUser.username,
+									id: foundUser._id,
+								},
+							},
 							process.env.JWT_SECRET,
 							{
 								expiresIn: "1h",
